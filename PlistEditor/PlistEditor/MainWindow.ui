@@ -38,7 +38,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="plistedit.qrc"/>
+  <include location="plisteditor.qrc"/>
  </resources>
  <connections/>
 </ui>

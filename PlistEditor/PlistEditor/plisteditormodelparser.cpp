@@ -35,8 +35,7 @@ QString transformType(const QVariant::Type& type)
         ret_type = QLatin1String("date");
         break;
     default:
-        qDebug() << QObject::tr("file:%1, function:%2, Warning: Invalid QVariant::Type.")
-            .arg(__FILE__).arg(__FUNCTION__);
+        qDebug("Warning: Invalid QVariant::Type.");
         break;
     }
     return ret_type;

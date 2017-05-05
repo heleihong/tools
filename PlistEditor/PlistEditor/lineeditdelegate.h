@@ -31,7 +31,8 @@ signals:
     void dataChanged(const QModelIndex&, QString) const;
 
 private:
-    static bool checkInput(const QString &type, const QString &val, int col);    
+    // return validity
+    static bool checkValueValidity(const QString& val, const QString &type, int col);
 };
 
 #endif // PLIST_EDITOR_LINE_EDIT_DELEGATE_H_

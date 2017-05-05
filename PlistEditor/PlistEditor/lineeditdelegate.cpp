@@ -1,5 +1,8 @@
 #include "lineeditdelegate.h"
 
+#include <QDebug>
+#include <QDateTime>
+
 LineEditDelegate::LineEditDelegate(QObject *parent)
     : QItemDelegate(parent)
 {
@@ -45,11 +48,12 @@ void LineEditDelegate::setModelData(QWidget *editor,
     // get type val
     QString type = model->data(typeIndex).toString();
 
-    // check new value
-    QString val = (checkInput(type, newVal, index.column())) ? newVal : oldVal;
-
-    // set data
-    emit dataChanged(index, val);
+    if (newVal != oldVal && 
+        checkValueValidity(newVal, type, index.column()))
+    {
+        // set data
+        emit dataChanged(index, newVal);
+    }
 }
 
 void LineEditDelegate::updateEditorGeometry(QWidget *editor,
@@ -58,29 +62,48 @@ void LineEditDelegate::updateEditorGeometry(QWidget *editor,
     editor->setGeometry(option.rect);
 }
 
-bool LineEditDelegate::checkInput(const QString &type, const QString &val, int col)
+bool LineEditDelegate::checkValueValidity(const QString& value, const QString &type, int col)
 {
-    bool ok;
-    if (col != 2) 
-        ok = true;
-    else
+    bool ok = false;
+    if (col == 0) 
     {
-        if (type == "integer")
+        ok = true;
+    }
+    else if (col == 2)
+    {
+        if (type == QLatin1String("boolean"))
         {
-            val.toInt(&ok);
+            if (value == QLatin1String("true") ||
+                value == QLatin1String("false"))
+            {
+                ok = true;
+            }
+        }
+        else if (type == QLatin1String("integer"))
+        {
+            value.toLongLong(&ok);
+        }
+        else if (type == QLatin1String("real"))
+        {
+            value.toDouble(&ok);
+        }
+        else if (type == QLatin1String("string"))
+        {
+            ok = true;
+        }
+        else if (type == QLatin1String("date"))
+        {
+            ok = QDateTime::fromString(value, Qt::ISODate).isValid();
         }
         else
         {
-            if (type == "real")
-            {
-                val.toFloat(&ok);
-            }
-            else
-            {
-                // we shouldn`t edit values of a dict or array
-                ok = ((type == "array" || type == "dict") && col == 2) ? false : true;
-            }
+            qWarning() << "type(" << type << ") is invalid or not support changes.";
         }
     }
+    else
+    {
+        qWarning() << "column(" << col << ") is invalid.";
+    }
+
     return ok;
 }
