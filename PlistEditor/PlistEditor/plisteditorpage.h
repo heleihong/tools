@@ -27,6 +27,9 @@ public:
 
     QUndoStack *getUndoStack();
 
+Q_SIGNALS:
+    void editorModifiedStatusChanged(bool modified);
+
 protected:
     void initTreeView();
 
@@ -34,8 +37,16 @@ public Q_SLOTS:
     void on_treeView_expanded();
     void on_treeView_collapsed();
 
+private Q_SLOTS:
+    void editorDataAboutToBeSet(const QModelIndex &index, QString val);
+
+private:
+    bool keyPressFilter(QKeyEvent *event);
+
 protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    bool eventFilter(QObject *obj, QEvent *ev) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
 
 private:
     PlistEditorModel *m_model;
@@ -43,6 +54,7 @@ private:
     QTreeView *m_treeView;
     QUndoStack *m_undoStack;
     bool m_treeExpanded;
+    bool m_modified_status;
 };
 
 #endif // PLIST_EDITOR_PLIST_EDITOR_PAGE_H_

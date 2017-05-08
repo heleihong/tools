@@ -91,6 +91,10 @@ bool LineEditDelegate::checkValueValidity(const QString& value, const QString &t
         {
             ok = true;
         }
+        else if (type == QLatin1String("data"))
+        {
+            // Data doesn't support changes temporarily
+        } 
         else if (type == QLatin1String("date"))
         {
             ok = QDateTime::fromString(value, Qt::ISODate).isValid();

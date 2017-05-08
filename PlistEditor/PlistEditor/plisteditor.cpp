@@ -1,6 +1,7 @@
 ﻿#include "PlistEditor.h"
 
 #include <QFileDialog>
+#include <QMenu>
 #include <QMimeData>
 #include <QtXml/QtXml>
 
@@ -62,11 +63,70 @@ PlistEditorPage *PlistEditor::createPage(PlistEditorModel *model, const QString&
     }
 
     // add tab
-    this->addTab(editorPage, _filePath);
+    addTab(editorPage, _filePath);
     // set as active
-    this->setCurrentWidget(editorPage);
+    setCurrentWidget(editorPage);
 
     return editorPage;
+}
+
+bool PlistEditor::hasPages()
+{
+    return count() > 0 ? true : false;
+}
+
+PlistEditorPage *PlistEditor::getPage(int i)
+{
+    if (i < 0 && i >= count())
+        return Q_NULLPTR;
+    return static_cast<PlistEditorPage*>(widget(i));
+}
+
+PlistEditorPage *PlistEditor::getCurrentPage()
+{
+    return getPage(currentIndex());
+}
+
+void PlistEditor::createMenu()
+{
+    QMenu contextMenu;
+    contextMenu.addAction(tr("Close"), this, SLOT(closeCurrentPage()));
+    contextMenu.addAction(tr("Close All BUT this "), this, SLOT(closeAllPagesButThis()));
+    contextMenu.addAction(tr("Close All to the Left"), this, SLOT(closeAllPagesToLeft()));
+    contextMenu.addAction(tr("Close All to the Right"), this, SLOT(closeAllPagesToRight()));
+    contextMenu.addAction(tr("Close All"), this, SLOT(closeAllPages()));
+    contextMenu.popup(QCursor::pos());
+    contextMenu.exec();
+}
+
+void PlistEditor::closeCurrentPage()
+{
+    PlistEditorPage* page = getCurrentPage();
+    if (!page)
+        return;
+
+    QUndoStack *page_stack = page->getUndoStack();
+    Q_ASSERT(page_stack != Q_NULLPTR);
+    if (page_stack->canUndo())
+    {
+
+    }
+}
+
+void PlistEditor::closeAllPagesButThis()
+{
+}
+
+void PlistEditor::closeAllPagesToLeft()
+{
+}
+
+void PlistEditor::closeAllPagesToRight()
+{
+}
+
+void PlistEditor::closeAllPages()
+{
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -93,4 +153,17 @@ void PlistEditor::dropEvent(QDropEvent *event)
     }
 
     openFiles(list);
+}
+
+void PlistEditor::contextMenuEvent(QContextMenuEvent * event)
+{
+    if (hasPages() && event->reason() == QContextMenuEvent::Mouse)
+    {
+        int i = tabBar()->tabAt(event->pos());
+        if (i != -1)
+        {
+            setCurrentIndex(i);
+            createMenu();
+        }
+    }
 }

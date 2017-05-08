@@ -171,8 +171,7 @@ Qt::ItemFlags PlistEditorModel::flags(const QModelIndex &index) const
         {
             QString type = item->type();
             if (type == QLatin1String("dict") ||
-                type == QLatin1String("array") ||
-                type == QLatin1String("data")) // Data doesn't support changes temporarily.
+                type == QLatin1String("array")) // Data doesn't support changes temporarily.
             {
                 return Qt::ItemIsSelectable;
             }

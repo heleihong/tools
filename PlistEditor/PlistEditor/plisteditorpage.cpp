@@ -2,11 +2,13 @@
 
 #include <QHeaderView>
 
+#include "commands.h"
 #include "lineeditdelegate.h"
 #include "plistdatatypedelegate.h"
 
 PlistEditorPage::PlistEditorPage(PlistEditorModel *model, QWidget *parent)
     : QWidget(parent)
+    , m_modified_status(false)
 {
     initTreeView();
 
@@ -16,6 +18,15 @@ PlistEditorPage::PlistEditorPage(PlistEditorModel *model, QWidget *parent)
     setModel(model);
 
     m_undoStack = new QUndoStack();
+    connect(m_undoStack, &QUndoStack::canUndoChanged, this,
+        [&](bool canUndo) 
+    {
+        if (m_modified_status != canUndo)
+        {
+            m_modified_status = canUndo;
+            editorModifiedStatusChanged(m_modified_status);
+        }
+    });
 
     QTreeView *view = m_treeView;
 
@@ -27,6 +38,15 @@ PlistEditorPage::PlistEditorPage(PlistEditorModel *model, QWidget *parent)
     view->setItemDelegateForColumn(2, delegate1);
 
     view->expandToDepth(0);
+
+    connect(delegate1, SIGNAL(dataChanged(const QModelIndex&, QString)), 
+        this, SLOT(editorDataAboutToBeSet(const QModelIndex &, QString)));
+    connect(delegate2, SIGNAL(dataChanged(const QModelIndex&, QString)), 
+        this, SLOT(editorDataAboutToBeSet(const QModelIndex &, QString)));
+
+    delegate1->installEventFilter(this);
+    delegate2->installEventFilter(this);
+    m_treeView->installEventFilter(this);
 }
 
 PlistEditorPage::~PlistEditorPage()
@@ -118,10 +138,60 @@ void PlistEditorPage::on_treeView_collapsed()
     on_treeView_expanded();
 }
 
+void PlistEditorPage::editorDataAboutToBeSet(const QModelIndex &index, QString val)
+{
+    QUndoCommand *editCommand = new EditCommand(val, m_model, QModelIndex(index));
+    m_undoStack->push(editCommand);
+}
+
 //////////////////////////////////////////////////////////////////////////
+
+bool PlistEditorPage::keyPressFilter(QKeyEvent *event)
+{
+    bool consumed = false;
+    int key = event->key();
+    switch (key)
+    {
+    case Qt::Key_Z:
+    case Qt::Key_Y:
+    {
+        if (event->modifiers() == Qt::ControlModifier)
+        {
+            if (key == Qt::Key_Z)
+                m_undoStack->undo();
+            else
+                m_undoStack->redo();
+            consumed = true;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return consumed;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 void PlistEditorPage::resizeEvent(QResizeEvent *event)
 {
     m_treeView->setGeometry(QRect(0, 0, 
         event->size().width(), event->size().height()));
     __super::resizeEvent(event);
+}
+
+bool PlistEditorPage::eventFilter(QObject *obj, QEvent *ev)
+{
+    if (ev->type() == QEvent::KeyPress)
+    {
+        if (keyPressFilter(static_cast<QKeyEvent*>(ev)))
+            return true;
+    }
+    return __super::eventFilter(obj, ev);
+}
+
+void PlistEditorPage::keyPressEvent(QKeyEvent *event)
+{
+    if (!keyPressFilter(event))
+        __super::keyPressEvent(event);
 }
