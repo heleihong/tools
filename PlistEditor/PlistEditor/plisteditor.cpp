@@ -67,6 +67,10 @@ PlistEditorPage *PlistEditor::createPage(PlistEditorModel *model, const QString&
     // set as active
     setCurrentWidget(editorPage);
 
+    // connects
+    connect(editorPage, &PlistEditorPage::editorModifiedStatusChanged,
+        this, &PlistEditor::pageModifiedStatusChanged);
+
     return editorPage;
 }
 
@@ -127,6 +131,29 @@ void PlistEditor::closeAllPagesToRight()
 
 void PlistEditor::closeAllPages()
 {
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void PlistEditor::pageModifiedStatusChanged(bool modified)
+{
+    PlistEditorPage *page = qobject_cast<PlistEditorPage*>(sender());
+    if (!page)
+        return;
+    
+    int index = indexOf(page);
+    Q_ASSERT(index != -1);
+    if (index == -1)
+        return;
+
+    QString tabName = tabText(index);
+    if (modified)
+        setTabText(index, tabName.append("*"));
+    else
+    {
+        Q_ASSERT(tabName.endsWith(QLatin1String("*")));
+        setTabText(index, tabName.left(tabName.size() - 1));
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////

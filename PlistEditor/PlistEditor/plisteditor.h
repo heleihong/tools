@@ -33,6 +33,9 @@ private:
     void closeAllPagesToRight();
     void closeAllPages();
 
+private Q_SLOTS:
+    void pageModifiedStatusChanged(bool modified);
+
 protected:
     void dragEnterEvent(QDragEnterEvent *event) Q_DECL_OVERRIDE;
     void dropEvent(QDropEvent *event) Q_DECL_OVERRIDE;
